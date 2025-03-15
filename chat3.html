@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --chat-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --border-color: #e2e8f0;
+            --modal-bg: #ffffff;
+            --hover-color: rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background: var(--background-color);
+            min-height: 100vh;
+            display: flex;
+            color: var(--text-color);
+        }
+
+        .app-container {
+            display: flex;
+            width: 100%;
+            max-width: 1600px;
+            margin: auto;
+            height: 100vh;
+            background: var(--chat-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .new-chat-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .chat-history {
+            margin-top: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item.active {
+            background: rgba(37, 99, 235, 0.2);
+        }
+
+        .history-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .history-delete-btn {
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover .history-delete-btn {
+            opacity: 1;
+        }
+
+        .history-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* Main Chat Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--chat-bg);
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .language-selector {
+            position: relative;
+            margin: 0 15px;
+            z-index: 1000;
+        }
+
+        .selected-language {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+
+        .selected-language:hover {
+            background: var(--hover-color);
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 18px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 0;
+            margin-top: 5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+            min-width: 150px;
+        }
+
+        .language-dropdown.show {
+            display: block;
+        }
+
+        .language-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            color: var(--text-color);
+        }
+
+        .language-option:hover {
+            background: var(--hover-color);
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--hover-color);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 80%;
+            animation: messageAppear 0.3s ease-out;
+        }
+
+        .message.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .user .avatar {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .assistant .avatar {
+            background: #64748b;
+            color: white;
+        }
+
+        .message-bubble {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .message-content {
+            padding: 15px 20px;
+            border-radius: 15px;
+            position: relative;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .user .message-content {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-left-radius: 5px;
+        }
+
+        .assistant .message-content {
+            background: var(--hover-color);
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--chat-bg);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            background: var(--background-color);
+            border-radius: 15px;
+            padding: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-field {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            padding: 10px;
+            resize: none;
+            max-height: 150px;
+            font-size: 0.95em;
+            outline: none;
+            color: var(--text-color);
+        }
+
+        .send-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .send-button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--modal-bg);
+            border-radius: 10px;
+            padding: 8px 0;
+            min-width: 150px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+
+        .menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s ease;
+            color: var(--text-color);
+        }
+
+        .menu-item:hover {
+            background: var(--hover-color);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--modal-bg);
+            border-radius: 15px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            color: var(--text-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        /* Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            animation: toastAppear 0.3s ease-out;
+        }
+
+        @keyframes toastAppear {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --background-color: #1a1a1a;
+            --chat-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --border-color: #404040;
+            --modal-bg: #333333;
+            --hover-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .app-container {
+                border-radius: 0;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* إضافة أنماط زر حذف المحادثة */
+        .delete-chat-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-chat-btn:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <button class="new-chat-btn">
+                <i class="fas fa-plus"></i>
+                محادثة جديدة
+            </button>
+            <div class="chat-history" id="chatHistory">
+                <!-- Chat history items will be added here -->
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="chat-header">
+                <div class="chat-title">المساعد الذكي</div>
+                <div class="language-selector">
+                    <button class="selected-language" id="selectedLanguage">
+                        <img src="https://flagcdn.com/24x18/sa.png" alt="العربية" class="flag-icon">
+                        <span>العربية</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="language-dropdown" id="languageDropdown">
+                        <div class="language-option" data-lang="ar">
+                            <img src="https://flagcdn.com/24x18/sa.png" alt="العربية" class="flag-icon">
+                            <span>العربية</span>
+                        </div>
+                        <div class="language-option" data-lang="en">
+                            <img src="https://flagcdn.com/24x18/gb.png" alt="English" class="flag-icon">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="fr">
+                            <img src="https://flagcdn.com/24x18/fr.png" alt="Français" class="flag-icon">
+                            <span>Français</span>
+                        </div>
+                        <div class="language-option" data-lang="de">
+                            <img src="https://flagcdn.com/24x18/de.png" alt="Deutsch" class="flag-icon">
+                            <span>Deutsch</span>
+                        </div>
+                        <div class="language-option" data-lang="es">
+                            <img src="https://flagcdn.com/24x18/es.png" alt="Español" class="flag-icon">
+                            <span>Español</span>
+                        </div>
+                        <div class="language-option" data-lang="it">
+                            <img src="https://flagcdn.com/24x18/it.png" alt="Italiano" class="flag-icon">
+                            <span>Italiano</span>
+                        </div>
+                        <div class="language-option" data-lang="tr">
+                            <img src="https://flagcdn.com/24x18/tr.png" alt="Türkçe" class="flag-icon">
+                            <span>Türkçe</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="action-btn" id="exportBtn" title="تصدير المحادثات">
+                        <i class="fas fa-file-export"></i>
+                    </button>
+                    <button class="action-btn" id="settingsBtn" title="الإعدادات">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="action-btn" id="themeBtn" title="تغيير المظهر">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="delete-chat-btn" id="deleteChatBtn">
+                        <i class="fas fa-trash"></i>
+                        <span>حذف المحادثة</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-bubble">
+                        <div class="message-content">
+                            مرحباً! كيف يمكنني مساعدتك اليوم؟
+                        </div>
+                        <div class="message-time">الآن</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        class="input-field" 
+                        id="userInput" 
+                        placeholder="اكتب رسالتك هنا..."
+                        rows="1"
+                    ></textarea>
+                    <button class="send-button" id="sendButton">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="menu-item" data-action="copy">
+            <i class="fas fa-copy"></i> نسخ
+        </div>
+        <div class="menu-item" data-action="edit">
+            <i class="fas fa-edit"></i> تعديل
+        </div>
+        <div class="menu-item" data-action="delete">
+            <i class="fas fa-trash"></i> حذف
+        </div>
+        <div class="menu-item" data-action="share">
+            <i class="fas fa-share"></i> مشاركة
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>الإعدادات</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>المظهر</h3>
+                    <div class="setting-item">
+                        <label>السمة</label>
+                        <select id="themeSelect">
+                            <option value="light">فاتح</option>
+                            <option value="dark">داكن</option>
+                            <option value="auto">تلقائي</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>حجم الخط</label>
+                        <input type="range" min="12" max="20" value="16" id="fontSizeRange">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>الخصوصية</h3>
+                    <div class="setting-item">
+                        <label>حفظ المحادثات</label>
+                        <label class="switch">
+                            <input type="checkbox" id="saveHistoryToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>مدة حفظ المحادثات</label>
+                        <select id="historyDuration">
+                            <option value="7">أسبوع</option>
+                            <option value="30">شهر</option>
+                            <option value="365">سنة</option>
+                            <option value="-1">دائماً</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatApp {
+            constructor() {
+                // تعريف النصوص في بداية التطبيق
+                this.texts = {
+                    ar: {
+                        newChat: 'محادثة جديدة',
+                        settings: 'الإعدادات',
+                        export: 'تصدير المحادثات',
+                        delete: 'حذف المحادثة',
+                        welcome: 'مرحباً! كيف يمكنني مساعدتك اليوم؟',
+                        assistant: 'المساعد الذكي',
+                        writeMessage: 'اكتب رسالتك هنا...',
+                        copy: 'نسخ',
+                        edit: 'تعديل',
+                        share: 'مشاركة',
+                        deleteConfirm: 'هل أنت متأكد من حذف هذه المحادثة؟',
+                        theme: 'تغيير المظهر',
+                        exportTitle: 'تصدير المحادثات',
+                        settingsTitle: 'الإعدادات'
+                    },
+                    en: {
+                        newChat: 'New Chat',
+                        settings: 'Settings',
+                        export: 'Export Chats',
+                        delete: 'Delete Chat',
+                        welcome: 'Hello! How can I help you today?',
+                        assistant: 'AI Assistant',
+                        writeMessage: 'Write your message here...',
+                        copy: 'Copy',
+                        edit: 'Edit',
+                        share: 'Share',
+                        deleteConfirm: 'Are you sure you want to delete this chat?',
+                        theme: 'Change Theme',
+                        exportTitle: 'Export Chats',
+                        settingsTitle: 'Settings'
+                    },
+                    fr: {
+                        newChat: 'Nouvelle Discussion',
+                        settings: 'Paramètres',
+                        export: 'Exporter',
+                        delete: 'Supprimer',
+                        welcome: 'Bonjour! Comment puis-je vous aider aujourd\'hui?',
+                        assistant: 'Assistant IA',
+                        writeMessage: 'Écrivez votre message ici...',
+                        copy: 'Copier',
+                        edit: 'Modifier',
+                        share: 'Partager',
+                        deleteConfirm: 'Voulez-vous vraiment supprimer cette conversation?',
+                        theme: 'Changer le Thème',
+                        exportTitle: 'Exporter les Discussions',
+                        settingsTitle: 'Paramètres'
+                    },
+                    de: {
+                        newChat: 'Neuer Chat',
+                        settings: 'Einstellungen',
+                        export: 'Exportieren',
+                        delete: 'Löschen',
+                        welcome: 'Hallo! Wie kann ich Ihnen heute helfen?',
+                        assistant: 'KI-Assistent',
+                        writeMessage: 'Schreiben Sie Ihre Nachricht hier...',
+                        copy: 'Kopieren',
+                        edit: 'Bearbeiten',
+                        share: 'Teilen',
+                        deleteConfirm: 'Möchten Sie diesen Chat wirklich löschen?',
+                        theme: 'Theme ändern',
+                        exportTitle: 'Chats exportieren',
+                        settingsTitle: 'Einstellungen'
+                    },
+                    es: {
+                        newChat: 'Nuevo Chat',
+                        settings: 'Ajustes',
+                        export: 'Exportar',
+                        delete: 'Eliminar',
+                        welcome: '¡Hola! ¿Cómo puedo ayudarte hoy?',
+                        assistant: 'Asistente IA',
+                        writeMessage: 'Escribe tu mensaje aquí...',
+                        copy: 'Copiar',
+                        edit: 'Editar',
+                        share: 'Compartir',
+                        deleteConfirm: '¿Estás seguro de que quieres eliminar este chat?',
+                        theme: 'Cambiar Tema',
+                        exportTitle: 'Exportar Chats',
+                        settingsTitle: 'Ajustes'
+                    },
+                    it: {
+                        newChat: 'Nuova Chat',
+                        settings: 'Impostazioni',
+                        export: 'Esporta',
+                        delete: 'Elimina',
+                        welcome: 'Ciao! Come posso aiutarti oggi?',
+                        assistant: 'Assistente IA',
+                        writeMessage: 'Scrivi il tuo messaggio qui...',
+                        copy: 'Copia',
+                        edit: 'Modifica',
+                        share: 'Condividi',
+                        deleteConfirm: 'Sei sicuro di voler eliminare questa chat?',
+                        theme: 'Cambia Tema',
+                        exportTitle: 'Esporta Chat',
+                        settingsTitle: 'Impostazioni'
+                    },
+                    tr: {
+                        newChat: 'Yeni Sohbet',
+                        settings: 'Ayarlar',
+                        export: 'Dışa Aktar',
+                        delete: 'Sil',
+                        welcome: 'Merhaba! Size bugün nasıl yardımcı olabilirim?',
+                        assistant: 'AI Asistan',
+                        writeMessage: 'Mesajınızı buraya yazın...',
+                        copy: 'Kopyala',
+                        edit: 'Düzenle',
+                        share: 'Paylaş',
+                        deleteConfirm: 'Bu sohbeti silmek istediğinizden emin misiniz?',
+                        theme: 'Temayı Değiştir',
+                        exportTitle: 'Sohbetleri Dışa Aktar',
+                        settingsTitle: 'Ayarlar'
+                    }
+                };
+
+                this.chatMessages = document.getElementById('chatMessages');
+                this.userInput = document.getElementById('userInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.chatHistory = document.getElementById('chatHistory');
+                this.conversations = this.loadConversations();
+                this.currentConversationId = null;
+                this.theme = localStorage.getItem('theme') || 'light';
+                this.fontSize = localStorage.getItem('fontSize') || '16';
+                this.currentLanguage = localStorage.getItem('language') || 'ar';
+                
+                this.setupEventListeners();
+                this.setupTheme();
+                this.setupContextMenu();
+                this.setupSettings();
+                this.setupLanguageSelector();
+                this.updateUIText(); // تحديث النصوص مباشرة بعد التهيئة
+                this.createNewConversation();
+                this.setupDeleteChat();
+            }
+
+            setupEventListeners() {
+                this.userInput.addEventListener('input', () => this.adjustTextareaHeight());
+                this.userInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+
+                document.querySelectorAll('.new-chat-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.createNewConversation());
+                });
+
+                document.getElementById('themeBtn').addEventListener('click', () => {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    this.setupTheme();
+                    localStorage.setItem('theme', this.theme);
+                });
+            }
+
+            setupTheme() {
+                document.documentElement.setAttribute('data-theme', this.theme);
+                document.documentElement.style.fontSize = this.fontSize + 'px';
+                document.getElementById('themeBtn').innerHTML = 
+                    `<i class="fas fa-${this.theme === 'light' ? 'moon' : 'sun'}"></i>`;
+            }
+
+            setupContextMenu() {
+                const contextMenu = document.getElementById('contextMenu');
+                
+                document.addEventListener('click', () => {
+                    contextMenu.style.display = 'none';
+                });
+
+                this.chatMessages.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    const message = e.target.closest('.message');
+                    if (message) {
+                        contextMenu.style.display = 'block';
+                        contextMenu.style.left = e.pageX + 'px';
+                        contextMenu.style.top = e.pageY + 'px';
+                        contextMenu.dataset.messageId = message.dataset.id;
+                    }
+                });
+
+                contextMenu.addEventListener('click', (e) => {
+                    const action = e.target.closest('.menu-item')?.dataset.action;
+                    const messageId = contextMenu.dataset.messageId;
+                    
+                    if (action && messageId) {
+                        this.handleContextMenuAction(action, messageId);
+                    }
+                });
+            }
+
+            setupSettings() {
+                const settingsBtn = document.getElementById('settingsBtn');
+                const settingsModal = document.getElementById('settingsModal');
+                const closeBtn = settingsModal.querySelector('.close-btn');
+                
+                settingsBtn.addEventListener('click', () => {
+                    settingsModal.style.display = 'block';
+                });
+
+                closeBtn.addEventListener('click', () => {
+                    settingsModal.style.display = 'none';
+                });
+
+                const themeSelect = document.getElementById('themeSelect');
+                themeSelect.value = this.theme;
+                themeSelect.addEventListener('change', (e) => {
+                    this.theme = e.target.value;
+                    this.setupTheme();
+                    localStorage.setItem('theme', this.theme);
+                });
+
+                const fontSizeRange = document.getElementById('fontSizeRange');
+                fontSizeRange.value = this.fontSize;
+                fontSizeRange.addEventListener('input', (e) => {
+                    this.fontSize = e.target.value;
+                    this.setupTheme();
+                    localStorage.setItem('fontSize', this.fontSize);
+                });
+
+                document.getElementById('exportBtn').addEventListener('click', () => {
+                    this.exportConversations();
+                });
+            }
+
+            adjustTextareaHeight() {
+                this.userInput.style.height = 'auto';
+                this.userInput.style.height = (this.userInput.scrollHeight) + 'px';
+            }
+
+            createNewConversation() {
+                const conversationId = Date.now().toString();
+                const conversation = {
+                    id: conversationId,
+                    title: 'محادثة جديدة',
+                    messages: []
+                };
+
+                this.conversations.unshift(conversation);
+                this.currentConversationId = conversationId;
+                this.saveConversations();
+                this.updateChatHistory();
+                this.clearChat();
+            }
+
+            loadConversations() {
+                const saved = localStorage.getItem('chatConversations');
+                return saved ? JSON.parse(saved) : [];
+            }
+
+            saveConversations() {
+                if (document.getElementById('saveHistoryToggle').checked) {
+                    localStorage.setItem('chatConversations', JSON.stringify(this.conversations));
+                }
+            }
+
+            updateChatHistory() {
+                this.chatHistory.innerHTML = '';
+                this.conversations.forEach(conversation => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = `history-item ${conversation.id === this.currentConversationId ? 'active' : ''}`;
+                    historyItem.innerHTML = `
+                        <div class="history-content">
+                            <i class="fas fa-comments"></i>
+                            <span>${this.texts[this.currentLanguage].newChat}</span>
+                        </div>
+                        <button class="history-delete-btn" data-id="${conversation.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    
+                    // إضافة مستمع حدث للنقر على المحادثة
+                    historyItem.querySelector('.history-content').addEventListener('click', () => {
+                        this.loadConversation(conversation.id);
+                    });
+
+                    // إضافة مستمع حدث لزر الحذف
+                    historyItem.querySelector('.history-delete-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm(this.texts[this.currentLanguage].deleteConfirm)) {
+                            this.deleteConversation(conversation.id);
+                        }
+                    });
+
+                    this.chatHistory.appendChild(historyItem);
+                });
+            }
+
+            loadConversation(conversationId) {
+                this.currentConversationId = conversationId;
+                this.updateChatHistory();
+                this.clearChat();
+                
+                const conversation = this.conversations.find(c => c.id === conversationId);
+                if (conversation) {
+                    conversation.messages.forEach(message => {
+                        this.addMessageToUI(message.content, message.sender);
+                    });
+                }
+            }
+
+            clearChat() {
+                const welcomeMessage = this.texts[this.currentLanguage].welcome;
+                this.chatMessages.innerHTML = `
+                    <div class="message assistant">
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-bubble">
+                            <div class="message-content">
+                                ${welcomeMessage}
+                            </div>
+                            <div class="message-time">الآن</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async sendMessage() {
+                const message = this.userInput.value.trim();
+                if (!message) return;
+
+                this.addMessageToUI(message, 'user');
+                this.addMessageToHistory(message, 'user');
+                
+                this.userInput.value = '';
+                this.userInput.style.height = 'auto';
+                
+                this.typingIndicator.classList.add('visible');
+                
+                try {
+                    const response = await fetch('http://localhost:8000/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+
+                    const data = await response.json();
+                    
+                    this.typingIndicator.classList.remove('visible');
+                    this.addMessageToUI(data.response, 'assistant');
+                    this.addMessageToHistory(data.response, 'assistant');
+                    
+                } catch (error) {
+                    this.typingIndicator.classList.remove('visible');
+                    this.addMessageToUI('عذراً، حدث خطأ في الاتصال.', 'assistant');
+                    console.error('Error:', error);
+                }
+            }
+
+            addMessageToUI(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                messageDiv.dataset.id = Date.now().toString();
+                
+                const time = new Date().toLocaleTimeString('ar-SA', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                messageDiv.innerHTML = `
+                    <div class="avatar">
+                        <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+                    </div>
+                    <div class="message-bubble">
+                        <div class="message-content">${content}</div>
+                        <div class="message-time">${time}</div>
+                    </div>
+                `;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            addMessageToHistory(content, sender) {
+                const conversation = this.conversations.find(c => c.id === this.currentConversationId);
+                if (conversation) {
+                    conversation.messages.push({
+                        id: Date.now().toString(),
+                        content: content,
+                        sender: sender,
+                        timestamp: new Date().toISOString()
+                    });
+                    this.saveConversations();
+                }
+            }
+
+            handleContextMenuAction(action, messageId) {
+                switch(action) {
+                    case 'copy':
+                        this.copyMessage(messageId);
+                        break;
+                    case 'edit':
+                        this.editMessage(messageId);
+                        break;
+                    case 'delete':
+                        this.deleteMessage(messageId);
+                        break;
+                    case 'share':
+                        this.shareMessage(messageId);
+                        break;
+                }
+            }
+
+            findMessage(messageId) {
+                const conversation = this.conversations.find(c => c.id === this.currentConversationId);
+                return conversation?.messages.find(m => m.id === messageId);
+            }
+
+            copyMessage(messageId) {
+                const messageElement = document.querySelector(`[data-id="${messageId}"] .message-content`);
+                if (messageElement) {
+                    navigator.clipboard.writeText(messageElement.textContent);
+                    this.showToast('تم نسخ الرسالة');
+                }
+            }
+
+            editMessage(messageId) {
+                const messageElement = document.querySelector(`[data-id="${messageId}"] .message-content`);
+                if (messageElement && messageElement.closest('.message').classList.contains('user')) {
+                    const newContent = prompt('تعديل الرسالة:', messageElement.textContent);
+                    if (newContent && newContent !== messageElement.textContent) {
+                        messageElement.textContent = newContent;
+                        const message = this.findMessage(messageId);
+                        if (message) {
+                            message.content = newContent;
+                            message.edited = true;
+                            this.saveConversations();
+                        }
+                    }
+                }
+            }
+
+            deleteMessage(messageId) {
+                if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+                    const messageElement = document.querySelector(`[data-id="${messageId}"]`);
+                    if (messageElement) {
+                        messageElement.remove();
+                        const conversation = this.conversations.find(c => c.id === this.currentConversationId);
+                        if (conversation) {
+                            conversation.messages = conversation.messages.filter(m => m.id !== messageId);
+                            this.saveConversations();
+                        }
+                    }
+                }
+            }
+
+            shareMessage(messageId) {
+                const messageElement = document.querySelector(`[data-id="${messageId}"] .message-content`);
+                if (messageElement) {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'مشاركة من المحادثة',
+                            text: messageElement.textContent
+                        });
+                    } else {
+                        this.copyMessage(messageId);
+                        this.showToast('تم نسخ الرسالة للمشاركة');
+                    }
+                }
+            }
+
+            showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            exportConversations() {
+                const data = JSON.stringify(this.conversations, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'chat-history.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showToast('تم تصدير المحادثات');
+            }
+
+            setupLanguageSelector() {
+                const selectedLanguage = document.getElementById('selectedLanguage');
+                const languageDropdown = document.getElementById('languageDropdown');
+                
+                // تحديث اللغة الأولية
+                const initialLang = this.currentLanguage;
+                const initialOption = document.querySelector(`.language-option[data-lang="${initialLang}"]`);
+                if (initialOption) {
+                    selectedLanguage.querySelector('img').src = initialOption.querySelector('img').src;
+                    selectedLanguage.querySelector('span').textContent = initialOption.querySelector('span').textContent;
+                }
+
+                // فتح/إغلاق القائمة
+                selectedLanguage.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    languageDropdown.classList.toggle('show');
+                });
+
+                // إغلاق القائمة عند النقر خارجها
+                document.addEventListener('click', (e) => {
+                    if (!languageDropdown.contains(e.target) && !selectedLanguage.contains(e.target)) {
+                        languageDropdown.classList.remove('show');
+                    }
+                });
+
+                // معالجة اختيار اللغة
+                document.querySelectorAll('.language-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const lang = option.dataset.lang;
+                        
+                        // تحديث الزر المحدد
+                        selectedLanguage.querySelector('img').src = option.querySelector('img').src;
+                        selectedLanguage.querySelector('span').textContent = option.querySelector('span').textContent;
+                        
+                        // تغيير اللغة
+                        this.changeLanguage(lang);
+                        
+                        // إغلاق القائمة
+                        languageDropdown.classList.remove('show');
+                    });
+                });
+            }
+
+            changeLanguage(lang) {
+                this.currentLanguage = lang;
+                localStorage.setItem('language', lang);
+                
+                // تحديث اتجاه الصفحة
+                const isRTL = ['ar'].includes(lang);
+                document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+                document.documentElement.setAttribute('lang', lang);
+                
+                // تحديث النصوص
+                this.updateUIText();
+            }
+
+            updateUIText() {
+                // تحديث العناصر مع النصوص المترجمة
+                document.querySelector('.chat-title').textContent = this.texts[this.currentLanguage].assistant;
+                document.querySelector('#userInput').placeholder = this.texts[this.currentLanguage].writeMessage;
+                document.querySelectorAll('.new-chat-btn').forEach(btn => {
+                    const icon = btn.querySelector('i').outerHTML;
+                    btn.innerHTML = `${icon} ${this.texts[this.currentLanguage].newChat}`;
+                });
+                
+                document.querySelector('#exportBtn').title = this.texts[this.currentLanguage].exportTitle;
+                document.querySelector('#settingsBtn').title = this.texts[this.currentLanguage].settingsTitle;
+                document.querySelector('#themeBtn').title = this.texts[this.currentLanguage].theme;
+                
+                // تحديث قائمة السياق
+                document.querySelector('[data-action="copy"]').innerHTML = 
+                    `<i class="fas fa-copy"></i> ${this.texts[this.currentLanguage].copy}`;
+                document.querySelector('[data-action="edit"]').innerHTML = 
+                    `<i class="fas fa-edit"></i> ${this.texts[this.currentLanguage].edit}`;
+                document.querySelector('[data-action="delete"]').innerHTML = 
+                    `<i class="fas fa-trash"></i> ${this.texts[this.currentLanguage].delete}`;
+                document.querySelector('[data-action="share"]').innerHTML = 
+                    `<i class="fas fa-share"></i> ${this.texts[this.currentLanguage].share}`;
+                
+                // تحديث زر حذف المحادثة
+                const deleteBtn = document.querySelector('#deleteChatBtn');
+                deleteBtn.innerHTML = `<i class="fas fa-trash"></i><span>${this.texts[this.currentLanguage].delete}</span>`;
+                
+                // تحديث رسالة الترحيب
+                const welcomeMessage = document.querySelector('.message.assistant .message-content');
+                if (welcomeMessage) {
+                    welcomeMessage.textContent = this.texts[this.currentLanguage].welcome;
+                }
+            }
+
+            setupDeleteChat() {
+                document.getElementById('deleteChatBtn').addEventListener('click', () => {
+                    if (confirm(this.texts[this.currentLanguage].deleteConfirm)) {
+                        this.deleteCurrentChat();
+                    }
+                });
+            }
+
+            deleteCurrentChat() {
+                if (this.currentConversationId) {
+                    this.conversations = this.conversations.filter(c => c.id !== this.currentConversationId);
+                    this.saveConversations();
+                    this.createNewConversation();
+                }
+            }
+
+            deleteConversation(conversationId) {
+                this.conversations = this.conversations.filter(c => c.id !== conversationId);
+                this.saveConversations();
+                
+                // إذا تم حذف المحادثة الحالية، قم بإنشاء محادثة جديدة
+                if (conversationId === this.currentConversationId) {
+                    this.createNewConversation();
+                } else {
+                    this.updateChatHistory();
+                }
+            }
+        }
+
+        // Initialize the chat application
+        const chat = new ChatApp();
+    </script>
+</body>
+</html>
