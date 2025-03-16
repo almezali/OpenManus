@@ -120,6 +120,18 @@ For unstable version, you also can run:
 ```bash
 python run_flow.py
 ```
+## Start with interactive interface for OpenManus
+
+One line for run OpenManus:
+
+```bash
+python app.py
+```
+then open chat3.html file in the web browser
+
+## 📸 Screenshots
+
+![chat3.html](https://github.com/almezali/OpenManus/blob/main/chat.png)
 
 ## How to contribute
 
